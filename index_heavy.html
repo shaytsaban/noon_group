@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Course Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --accent: #10b981;
+            --background: #f8fafc;
+            --text: #1e293b;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
+        
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 300ms ease-in-out;
+        }
+        
+        .btn {
+            transition: all 300ms ease-in-out;
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .skeleton {
+            animation: skeleton-loading 1s linear infinite alternate;
+        }
+        
+        @keyframes skeleton-loading {
+            0% { background-color: #e2e8f0; }
+            100% { background-color: #cbd5e1; }
+        }
+        
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, createContext, useContext } = React;
+        const { QueryClient, QueryClientProvider, useQuery } = ReactQuery;
+        
+        // Context for dark mode
+        const ThemeContext = createContext();
+        
+        // Main App Component
+        const App = () => {
+            const [darkMode, setDarkMode] = useState(false);
+            const [activeView, setActiveView] = useState('dashboard');
+            const [toasts, setToasts] = useState([]);
+            
+            const addToast = (message, type = 'info') => {
+                const id = Date.now();
+                setToasts(prev => [...prev, { id, message, type }]);
+                setTimeout(() => {
+                    setToasts(prev => prev.filter(t => t.id !== id));
+                }, 3000);
+            };
+            
+            return (
+                <ThemeContext.Provider value={{ darkMode, setDarkMode }}>
+                    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
+                        <Header 
+                            activeView={activeView} 
+                            setActiveView={setActiveView} 
+                            darkMode={darkMode}
+                            setDarkMode={setDarkMode}
+                        />
+                        <main className="container mx-auto px-4 py-8">
+                            {activeView === 'dashboard' && <Dashboard />}
+                            {activeView === 'courses' && <CourseManagement addToast={addToast} />}
+                            {activeView === 'students' && <StudentManagement />}
+                            {activeView === 'analytics' && <Analytics />}
+                        </main>
+                        <ToastContainer toasts={toasts} />
+                    </div>
+                </ThemeContext.Provider>
+            );
+        };
+        
+        // Header Component
+        const Header = ({ activeView, setActiveView, darkMode, setDarkMode }) => {
+            return (
+                <header className="bg-white dark:bg-gray-800 shadow-sm">
+                    <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+                        <div className="flex items-center space-x-2">
+                            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+                                <span className="text-white font-bold text-xl">C</span>
+                            </div>
+                            <h1 className="text-2xl font-bold text-slate-800 dark:text-white">CourseMaster</h1>
+                        </div>
+                        
+                        <nav className="hidden md:flex space-x-8">
+                            {['dashboard', 'courses', 'students', 'analytics'].map((item) => (
+                                <button
+                                    key={item}
+                                    onClick={() => setActiveView(item)}
+                                    className={`capitalize font-medium ${
+                                        activeView === item 
+                                            ? 'text-blue-600 dark:text-blue-400' 
+                                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                                    }`}
+                                >
+                                    {item}
+                                </button>
+                            ))}
+                        </nav>
+                        
+                        <div className="flex items-center space-x-4">
+                            <button 
+                                onClick={() => setDarkMode(!darkMode)}
+                                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-gray-700"
+                            >
+                                {darkMode ? '☀️' : '🌙'}
+                            </button>
+                            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-gray-600 flex items-center justify-center">
+                                <span className="font-semibold text-slate-700 dark:text-white">U</span>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            );
+        };
+        
+        // Dashboard Component
+        const Dashboard = () => {
+            const stats = [
+                { title: 'Total Courses', value: '24', change: '+12%', icon: '📚' },
+                { title: 'Active Students', value: '1,240', change: '+8%', icon: '👥' },
+                { title: 'Completion Rate', value: '78%', change: '+5%', icon: '✅' },
+                { title: 'Avg. Progress', value: '64%', change: '+3%', icon: '📈' }
+            ];
+            
+            return (
+                <div>
+                    <h2 className="text-3xl font-bold mb-6">Dashboard Overview</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        {stats.map((stat, index) => (
+                            <div key={index} className="card bg-white dark:bg-gray-800 p-6">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm">{stat.title}</p>
+                                        <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
+                                        <p className="text-green-500 text-sm mt-1">{stat.change}</p>
+                                    </div>
+                                    <div className="text-2xl">{stat.icon}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 card bg-white dark:bg-gray-800 p-6">
+                            <h3 className="text-lg font-semibold mb-4">Enrollment Trends</h3>
+                            <div className="h-64 flex items-center justify-center bg-slate-50 dark:bg-gray-700 rounded-lg">
+                                <p className="text-slate-500">Chart Visualization Area</p>
+                            </div>
+                        </div>
+                        
+                        <div className="card bg-white dark:bg-gray-800 p-6">
+                            <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+                            <ul className="space-y-4">
+                                {[1, 2, 3].map(i => (
+                                    <li key={i} className="flex items-start">
+                                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                                            <span className="text-blue-600 dark:text-blue-400 text-xs">👤</span>
+                                        </div>
+                                        <div>
+                                            <p className="font-medium">New student enrolled</p>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">2 hours ago</p>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+        
+        // Course Management Component
+        const CourseManagement = ({ addToast }) => {
+            const [courses, setCourses] = useState([
+                { id: 1, title: 'Advanced React', instructor: 'Jane Smith', progress: 75, students: 120 },
+                { id: 2, title: 'UI/UX Design Fundamentals', instructor: 'John Doe', progress: 40, students: 85 },
+                { id: 3, title: 'Data Science Essentials', instructor: 'Emily Johnson', progress: 90, students: 210 }
+            ]);
+            
+            const [searchTerm, setSearchTerm] = useState('');
+            const [filteredCourses, setFilteredCourses] = useState(courses);
+            
+            useEffect(() => {
+                const filtered = courses.filter(course => 
+                    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                setFilteredCourses(filtered);
+            }, [searchTerm, courses]);
+            
+            const handleDelete = (id) => {
+                setCourses(courses.filter(course => course.id !== id));
+                addToast('Course deleted successfully', 'success');
+            };
+            
+            return (
+                <div>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-3xl font-bold">Course Management</h2>
+                        <button className="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                            <span className="mr-2">+</span> New Course
+                        </button>
+                    </div>
+                    
+                    <div className="mb-6">
+                        <input
+                            type="text"
+                            placeholder="Search courses..."
+                            className="w-full p-3 rounded-lg border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredCourses.map(course => (
+                            <div key={course.id} className="card bg-white dark:bg-gray-800 overflow-hidden">
+                                <div className="h-40 bg-gradient-to-r from-blue-500 to-indigo-600 relative">
+                                    <div className="absolute top-4 right-4 bg-white dark:bg-gray-700 text-slate-800 dark:text-white px-3 py-1 rounded-full text-sm font-medium">
+                                        {course.students} students
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    <h3 className="text-xl font-bold mb-2">{course.title}</h3>
+                                    <p className="text-slate-600 dark:text-slate-400 mb-4">by {course.instructor}</p>
+                                    
+                                    <div className="mb-4">
+                                        <div className="flex justify-between text-sm mb-1">
+                                            <span>Progress</span>
+                                            <span>{course.progress}%</span>
+                                        </div>
+                                        <div className="progress-bar bg-slate-200 dark:bg-gray-700">
+                                            <div 
+                                                className="h-full bg-green-500 rounded-full" 
+                                                style={{ width: `${course.progress}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex justify-between">
+                                        <button className="btn text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                            Edit
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDelete(course.id)}
+                                            className="btn text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+        
+        // Student Management Component
+        const StudentManagement = () => {
+            const [students] = useState([
+                { id: 1, name: 'Alex Johnson', email: 'alex@example.com', status: 'active', progress: 85 },
+                { id: 2, name: 'Maria Garcia', email: 'maria@example.com', status: 'active', progress: 70 },
+                { id: 3, name: 'David Kim', email: 'david@example.com', status: 'inactive', progress: 45 }
+            ]);
+            
+            const getStatusColor = (status) => {
+                return status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+            };
+            
+            return (
+                <div>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-3xl font-bold">Student Management</h2>
+                        <button className="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Add Student
+                        </button>
+                    </div>
+                    
+                    <div className="card bg-white dark:bg-gray-800 overflow-hidden">
+                        <table className="w-full">
+                            <thead className="bg-slate-100 dark:bg-gray-700">
+                                <tr>
+                                    <th className="text-left p-4 font-semibold">Student</th>
+                                    <th className="text-left p-4 font-semibold">Email</th>
+                                    <th className="text-left p-4 font-semibold">Status</th>
+                                    <th className="text-left p-4 font-semibold">Progress</th>
+                                    <th className="text-left p-4 font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {students.map(student => (
+                                    <tr key={student.id} className="border-b border-slate-200 dark:border-gray-700">
+                                        <td className="p-4 font-medium">{student.name}</td>
+                                        <td className="p-4 text-slate-600 dark:text-slate-400">{student.email}</td>
+                                        <td className="p-4">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(student.status)}`}>
+                                                {student.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center">
+                                                <div className="w-32 mr-2">
+                                                    <div className="progress-bar bg-slate-200 dark:bg-gray-700">
+                                                        <div 
+                                                            className="h-full bg-blue-500 rounded-full" 
+                                                            style={{ width: `${student.progress}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                                <span>{student.progress}%</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <button className="btn text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-3">
+                                                View
+                                            </button>
+                                            <button className="btn text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white">
+                                                Edit
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+        
+        // Analytics Component
+        const Analytics = () => {
+            return (
+                <div>
+                    <h2 className="text-3xl font-bold mb-6">Analytics & Reports</h2>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div className="card bg-white dark:bg-gray-800 p-6">
+                            <h3 className="text-lg font-semibold mb-4">Course Completion Rates</h3>
+                            <div className="h-64 flex items-center justify-center bg-slate-50 dark:bg-gray-700 rounded-lg">
+                                <p className="text-slate-500">Bar Chart Visualization</p>
+                            </div>
+                        </div>
+                        
+                        <div className="card bg-white dark:bg-gray-800 p-6">
+                            <h3 className="text-lg font-semibold mb-4">Student Engagement</h3>
+                            <div className="h-64 flex items-center justify-center bg-slate-50 dark:bg-gray-700 rounded-lg">
+                                <p className="text-slate-500">Line Chart Visualization</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="card bg-white dark:bg-gray-800 p-6">
+                        <h3 className="text-lg font-semibold mb-4">Export Reports</h3>
+                        <div className="flex flex-wrap gap-4">
+                            {['PDF Report', 'Excel Spreadsheet', 'CSV Data'].map((format, index) => (
+                                <button 
+                                    key={index}
+                                    className="btn bg-slate-100 hover:bg-slate-200 dark:bg-gray-700 dark:hover:bg-gray-600 px-4 py-2 rounded-lg"
+                                >
+                                    Export {format}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+        
+        // Toast Container
+        const ToastContainer = ({ toasts }) => {
+            if (!toasts.length) return null;
+            
+            return (
+                <div className="toast-container">
+                    {toasts.map(toast => (
+                        <div 
+                            key={toast.id}
+                            className={`toast px-6 py-4 rounded-lg shadow-lg flex items-center max-w-md ${
+                                toast.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                            }`}
+                        >
+                            <span className="mr-2">{toast.type === 'success' ? '✅' : 'ℹ️'}</span>
+                            {toast.message}
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+        
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+    
+    <!-- Load React Query -->
+    <script src="https://unpkg.com/react-query@3.39.3/dist/react-query.production.min.js"></script>
+</body>
+</html>
