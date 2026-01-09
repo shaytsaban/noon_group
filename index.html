@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Course Management System</title>
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Font Inter (or system font stack) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <!-- Custom CSS for additional styles -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .bg-primary { background-color: #2563eb; }
+        .text-secondary { color: #64748b; }
+        /* Add more styles as needed */
+    </style>
+</head>
+<body class="bg-light-slate">
+    <!-- Header Section -->
+    <header class="p-4 bg-primary text-white flex justify-between items-center">
+        <h1 class="text-xl font-bold">Course Management System</h1>
+        <div class="flex space-x-2">
+            <!-- Dark Mode Toggle (Placeholder) -->
+            <button class="border border-transparent hover:border-gray-300 p-2 rounded-md text-sm">Dark Mode</button>
+            <!-- Language Selector (Placeholder) -->
+            <select class="p-2 rounded-md w-16">
+                <option value="en">English</option>
+                <option value="fr">French</option>
+            </select>
+        </div>
+    </header>
+
+    <!-- Main Content Section -->
+    <main class="container mx-auto p-4">
+        <!-- Dashboard Section -->
+        <section class="mt-8">
+            <h2 class="text-2xl font-bold mb-2">Dashboard</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Metrics Cards (Placeholder) -->
+                <div class="bg-gradient-to-r from-primary to-accent rounded-lg p-6 shadow-md hover:bg-opacity-90 text-white">
+                    <p class="text-sm font-semibold mb-2">Total Courses</p>
+                    <h3 class="text-4xl font-bold mb-1">50</h3>
+                </div>
+                <!-- Add more metrics cards -->
+            </div>
+        </section>
+
+        <!-- Course Management Section -->
+        <section class="mt-8">
+            <h2 class="text-2xl font-bold mb-2">Course Management</h2>
+            <!-- Course Cards (Placeholder) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-light-slate rounded-lg p-6 shadow-md hover:bg-opacity-90 text-black">
+                    <img src="/path/to/course-image.jpg" alt="Course Image" class="w-full h-[200px] object-cover mb-4 rounded-t-lg">
+                    <h3 class="text-xl font-bold">Introduction to React</h3>
+                    <!-- Progress Indicator (Placeholder) -->
+                </div>
+                <!-- Add more course cards -->
+            </div>
+        </section>
+
+        <!-- Student Management Section -->
+        <section class="mt-8">
+            <h2 class="text-2xl font-bold mb-2">Student Management</h2>
+            <!-- Data Tables (Placeholder) -->
+            <table class="w-full mt-4 overflow-auto">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th>Name</th>
+                        <th>Course</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Student Rows (Placeholder) -->
+                    <tr class="border-b border-gray-300 hover:bg-gray-100">
+                        <td>Jane Doe</td>
+                        <td>Introduction to React</td>
+                        <td><span class="bg-green-500 text-white px-2 py-1 rounded-md">Enrolled</span></td>
+                        <td><button class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-700">Details</button></td>
+                    </tr>
+                    <!-- Add more student rows -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Content Management Section -->
+        <section class="mt-8">
+            <h2 class="text-2xl font-bold mb-2">Content Management</h2>
+            <!-- Rich Text Editor (Placeholder) -->
+            <div id="richTextEditor" class="w-full h-[400px] p-4 border rounded-lg shadow-md"></div>
+            <!-- File Upload (Placeholder) -->
+            <input type="file" id="fileUpload" multiple class="mt-2">
+        </section>
+
+        <!-- Analytics & Reporting Section -->
+        <section class="mt-8">
+            <h2 class="text-2xl font-bold mb-2">Analytics & Reporting</h2>
+            <!-- Dashboard Widgets (Placeholder) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Widget 1 (Placeholder) -->
+                <div class="bg-light-slate rounded-lg p-6 shadow-md hover:bg-opacity-90 text-black">
+                    <h3>Active Students</h3>
+                    <p class="text-xl font-bold mb-2">800</p>
+                </div>
+                <!-- Add more widgets -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Scripts (React and other dependencies) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tanstack/query-core/dist/query-core.esm.min.js"></script>
+    <!-- Add more script imports as needed -->
+
+    <!-- Placeholder for React components (dashboard, forms, etc.) -->
+    <!-- Example: <div id="app"></div> -->
+</body>
+</html>
