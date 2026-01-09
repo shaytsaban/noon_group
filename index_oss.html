@@ -3,60 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Acme LMS – Example</title>
+  <title>Acme LMS – Demo</title>
 
-  <!-- Tailwind CSS (JIT) -->
+  <!-- Tailwind (JIT) – we add our colour palette via CSS variables -->
   <script>
-    // Tailwind’s CDN “play CDN”. It reads our custom colours from CSS variables.
-    // We set the palette via :root so the colours match the brief exactly.
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.innerHTML = `
       :root {
-        --color-primary: #2563eb;
-        --color-secondary: #64748b;
-        --color-accent: #10b981;
-        --color-bg: #f8fafc;
-        --color-text: #1e293b;
+        --color-primary: #2563eb;   /* professional blue   */
+        --color-secondary: #64748b;/* slate gray          */
+        --color-accent: #10b981;    /* emerald green       */
+        --color-bg: #f8fafc;        /* light slate         */
+        --color-text: #1e293b;      /* dark slate          */
       }
-      .bg-primary{background-color:var(--color-primary);}
-      .bg-secondary{background-color:var(--color-secondary);}
-      .bg-accent{background-color:var(--color-accent);}
-      .bg-page{background-color:var(--color-bg);}
-      .text-primary{color:var(--color-primary);}
-      .text-secondary{color:var(--color-secondary);}
-      .text-accent{color:var(--color-accent);}
-      .text-page{color:var(--color-text);}
+      .bg-primary   { background-color: var(--color-primary);   }
+      .bg-secondary { background-color: var(--color-secondary); }
+      .bg-accent    { background-color: var(--color-accent);    }
+      .bg-page      { background-color: var(--color-bg);       }
+      .text-page    { color: var(--color-text);               }
+      .gradient-card{
+        background:linear-gradient(135deg,var(--color-primary),var(--color-accent));
+      }
+      .rounded-card{border-radius:8px}
+      .focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
     `;
     document.head.appendChild(style);
   </script>
+
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css"
         rel="stylesheet" />
-  <!-- Inter Font -->
+
+  <!-- Inter font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
         rel="stylesheet" />
   <style>
-    html {
-      font-family: "Inter", system-ui, -apple-system, sans-serif;
-    }
-    .rounded-card {
-      border-radius: 8px; /* base unit = 8px */
-    }
-    .focus-visible {
-      outline: 2px solid var(--color-accent);
-      outline-offset: 2px;
-    }
-    .gradient-card {
-      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-    }
+    html{font-family:"Inter",system-ui,-apple-system,sans-serif}
   </style>
 </head>
 <body class="bg-page text-page transition-colors duration-300">
 
   <div id="root"></div>
 
-  <!-- React & ReactDOM (ESM) -->
+  <!-- ==== React & friends (ESM) ==== -->
   <script type="module">
-    /* ==== IMPORTS ==== */
+    // ---------- Imports ----------
     import React, { useState, useEffect, useMemo, useRef } from "https://esm.sh/react@18";
     import { createRoot } from "https://esm.sh/react-dom/client@18";
 
@@ -80,9 +71,9 @@
 
     import i18next from "https://esm.sh/i18next@22";
 
-    import Chart from "https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.esm.min.js";
+    import { Chart } from "https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.esm.min.js";
 
-    /* ==== i18n SETUP ==== */
+    // ---------- i18n ----------
     i18next.init({
       lng: "en",
       fallbackLng: "en",
@@ -184,329 +175,198 @@
       }
     });
 
-    const t = i18next.t.bind(i18next);
+    const t = i18next.t.bind(i18next); // shortcut
 
-    /* ==== MOCK API (simulated with Promise) ==== */
+    // ---------- Debounce hook (must be defined before use) ----------
+    const useDebounce = (value, delay = 300) => {
+      const [debounced, setDebounced] = useState(value);
+      useEffect(() => {
+        const id = setTimeout(() => setDebounced(value), delay);
+        return () => clearTimeout(id);
+      }, [value, delay]);
+      return debounced;
+    };
+
+    // ---------- Mock data & fake API ----------
     const mockDelay = (ms) => new Promise(r => setTimeout(r, ms));
 
     const mockDB = {
-      metrics: {
-        totalCourses: 18,
-        totalStudents: 547,
-        completions: 321,
-        activeUsers: 214
-      },
+      metrics: { totalCourses: 18, totalStudents: 547, completions: 321, activeUsers: 214 },
       recentActivity: [
-        {
-          id: 1,
-          user: "Lena Martinez",
-          action: "enrolled in \"Full‑Stack JavaScript\"",
-          time: "15 min ago",
-          avatar: "https://i.pravatar.cc/40?img=12"
-        },
-        {
-          id: 2,
-          user: "Johan Henriksson",
-          action: "completed \"Docker Essentials\"",
-          time: "1 h ago",
-          avatar: "https://i.pravatar.cc/40?img=23"
-        },
-        {
-          id: 3,
-          user: "Fatima Al‑Saadi",
-          action: "uploaded new lecture \"Reactive Streams\"",
-          time: "3 h ago",
-          avatar: "https://i.pravatar.cc/40?img=34"
-        },
-        {
-          id: 4,
-          user: "Zoe Chen",
-          action: "started “Kubernetes in Production”",
-          time: "4 h ago",
-          avatar: "https://i.pravatar.cc/40?img=45"
-        }
+        { id:1, user:"Lena Martinez", action:'enrolled in "Full‑Stack JavaScript"', time:"15 min ago", avatar:"https://i.pravatar.cc/40?img=12" },
+        { id:2, user:"Johan Henriksson", action:'completed "Docker Essentials"', time:"1 h ago", avatar:"https://i.pravatar.cc/40?img=23" },
+        { id:3, user:"Fatima Al‑Saadi", action:'uploaded new lecture "Reactive Streams"', time:"3 h ago", avatar:"https://i.pravatar.cc/40?img=34" },
+        { id:4, user:"Zoe Chen", action:'started “Kubernetes in Production”', time:"4 h ago", avatar:"https://i.pravatar.cc/40?img=45" }
       ],
       courses: [
-        {
-          id: "c1",
-          title: "Full‑Stack JavaScript",
-          progress: 0.73,
-          cover: "https://picsum.photos/id/1015/400/200"
-        },
-        {
-          id: "c2",
-          title: "Docker Essentials",
-          progress: 0.41,
-          cover: "https://picsum.photos/id/1025/400/200"
-        },
-        {
-          id: "c3",
-          title: "Kubernetes in Production",
-          progress: 0.12,
-          cover: "https://picsum.photos/id/1035/400/200"
-        },
-        {
-          id: "c4",
-          title: "Reactive Streams with RxJS",
-          progress: 0.56,
-          cover: "https://picsum.photos/id/1045/400/200"
-        },
-        {
-          id: "c5",
-          title: "Advanced TypeScript",
-          progress: 0.84,
-          cover: "https://picsum.photos/id/1055/400/200"
-        },
-        {
-          id: "c6",
-          title: "GraphQL & Apollo",
-          progress: 0.3,
-          cover: "https://picsum.photos/id/1065/400/200"
-        }
+        { id:"c1", title:"Full‑Stack JavaScript", progress:0.73, cover:"https://picsum.photos/id/1015/400/200" },
+        { id:"c2", title:"Docker Essentials", progress:0.41, cover:"https://picsum.photos/id/1025/400/200" },
+        { id:"c3", title:"Kubernetes in Production", progress:0.12, cover:"https://picsum.photos/id/1035/400/200" },
+        { id:"c4", title:"Reactive Streams with RxJS", progress:0.56, cover:"https://picsum.photos/id/1045/400/200" },
+        { id:"c5", title:"Advanced TypeScript", progress:0.84, cover:"https://picsum.photos/id/1055/400/200" },
+        { id:"c6", title:"GraphQL & Apollo", progress:0.30, cover:"https://picsum.photos/id/1065/400/200" }
       ],
       students: Array.from({ length: 123 }, (_, i) => ({
-        id: `s${i + 1}`,
-        name: `Student ${i + 1}`,
-        email: `student${i + 1}@acme.com`,
-        status: ["enrolled", "pending", "completed"][i % 3],
-        avatar: `https://i.pravatar.cc/40?img=${(i % 70) + 1}`
+        id:`s${i+1}`,
+        name:`Student ${i+1}`,
+        email:`student${i+1}@acme.com`,
+        status:["enrolled","pending","completed"][i%3],
+        avatar:`https://i.pravatar.cc/40?img=${(i%70)+1}`
       }))
     };
 
-    const fetchMetrics = async () => {
-      await mockDelay(900);
-      return mockDB.metrics;
-    };
-    const fetchRecentActivity = async () => {
-      await mockDelay(1200);
-      return mockDB.recentActivity;
-    };
-    const fetchCourses = async () => {
-      await mockDelay(1300);
-      return mockDB.courses;
-    };
-    const fetchStudents = async () => {
-      await mockDelay(1500);
-      return mockDB.students;
-    };
+    const fetchMetrics   = async () => { await mockDelay(900);   return mockDB.metrics; };
+    const fetchActivity  = async () => { await mockDelay(1200); return mockDB.recentActivity; };
+    const fetchCourses   = async () => { await mockDelay(1300); return mockDB.courses; };
+    const fetchStudents  = async () => { await mockDelay(1500); return mockDB.students; };
 
-    /* ==== QUERY CLIENT ==== */
+    // ---------- React‑Query client ----------
     const queryClient = new QueryClient();
 
-    /* ==== MAIN APP ==== */
+    // ---------- Main App ----------
     const App = () => {
-      // Global UI state
       const [dark, setDark] = useState(() => !!localStorage.getItem("dark"));
       const [lang, setLang] = useState(i18next.language);
-      const [role, setRole] = useState("admin");
+      const [role, setRole] = useState("admin"); // demo role switch
       const [notifCount, setNotifCount] = useState(0);
 
-      // Apply dark mode class
+      // dark‑mode class handling
       useEffect(() => {
         const html = document.documentElement;
-        if (dark) {
-          html.classList.add("dark");
-          localStorage.setItem("dark", "1");
-        } else {
-          html.classList.remove("dark");
-          localStorage.removeItem("dark");
-        }
+        if (dark) { html.classList.add("dark"); localStorage.setItem("dark","1"); }
+        else      { html.classList.remove("dark"); localStorage.removeItem("dark"); }
       }, [dark]);
 
-      // Switch language
-      useEffect(() => {
-        i18next.changeLanguage(lang);
-      }, [lang]);
+      // change language globaly
+      useEffect(() => i18next.changeLanguage(lang), [lang]);
 
-      // Fake "real‑time" notifications
+      // dummy real‑time notification bump
       useEffect(() => {
-        const id = setInterval(() => setNotifCount((c) => c + 1), 18000);
+        const id = setInterval(() => setNotifCount(c => c + 1), 18000);
         return () => clearInterval(id);
       }, []);
-
-      // Grab translations for UI
-      const tr = i18next.t.bind(i18next);
 
       return (
         <QueryClientProvider client={queryClient}>
           <div className="flex flex-col min-h-screen">
-            {/* ===== HEADER ===== */}
+
+            {/* ----- Header ----- */}
             <header className="bg-white dark:bg-slate-800 shadow-sm transition-colors duration-300">
               <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
-                <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
-                  {tr("title")}
-                </h1>
+                <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">{t("title")}</h1>
+
                 <div className="flex items-center space-x-4">
-                  {/* Notification badge */}
-                  <button
-                    className="relative text-slate-600 dark:text-slate-300 focus-visible"
-                    aria-label={tr("recentActivity")}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 17h5l-1.405-1.405C18.79 14.79 19 13.91 19 13V8a7 7 0 10-14 0v5c0 .91.21 1.79.595 2.595L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                      />
+                  {/* notification badge */}
+                  <button className="relative text-slate-600 dark:text-slate-300 focus-visible"
+                          aria-label={t("recentActivity")}>
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         className="h-6 w-6"
+                         fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M15 17h5l-1.405-1.405C18.79 14.79 19 13.91 19 13V8a7 7 0 10-14 0v5c0 .91.21 1.79.595 2.595L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                     </svg>
-                    {notifCount > 0 && (
-                      <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-accent rounded-full">
-                        {notifCount}
-                      </span>
+                    {notifCount>0 && (
+                      <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-accent rounded-full">{notifCount}</span>
                     )}
                   </button>
 
-                  {/* Dark‑mode toggle */}
-                  <button
-                    onClick={() => setDark(!dark)}
-                    className="focus-visible"
-                    aria-label={tr("darkMode")}
-                  >
+                  {/* dark‑mode toggle */}
+                  <button onClick={() => setDark(!dark)} className="focus-visible"
+                          aria-label={t("darkMode")}>
                     {dark ? (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6 text-slate-500"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path d="M10 2a8 8 0 100 16 8 8 0 000-16z" />
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg"
+                           className="h-6 w-6 text-slate-500"
+                           viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/></svg>
                     ) : (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6 text-slate-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 3v1m0 16v1m8.66-10.66l-.71.71M4.05 19.95l-.71-.71M21 12h-1M4 12H3m15.36 6.36l-.71-.71M6.05 5.05l-.71-.71M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                        />
-                      </svg>
+                      <svg xmlns="http://www.w3.org/2000/svg"
+                           className="h-6 w-6 text-slate-500"
+                           fill="none" viewBox="0 0 24 24"
+                           stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M12 3v1m0 16v1m8.66-10.66l-.71.71M4.05 19.95l-.71-.71M21 12h-1M4 12H3m15.36 6.36l-.71-.71M6.05 5.05l-.71-.71M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                     )}
                   </button>
 
-                  {/* Language selector */}
-                  <select
-                    value={lang}
-                    onChange={(e) => setLang(e.target.value)}
-                    className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-md focus-visible"
-                    aria-label={tr("language")}
-                  >
+                  {/* language selector */}
+                  <select value={lang} onChange={e=>setLang(e.target.value)}
+                          className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-md focus-visible"
+                          aria-label={t("language")}>
                     <option value="en">English</option>
                     <option value="es">Español</option>
                   </select>
 
-                  {/* Role selector (demo only) */}
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-md focus-visible"
-                    aria-label={tr("role")}
-                  >
-                    <option value="admin">{tr("admin")}</option>
-                    <option value="instructor">{tr("instructor")}</option>
-                    <option value="student">{tr("student")}</option>
+                  {/* role selector (demo) */}
+                  <select value={role} onChange={e=>setRole(e.target.value)}
+                          className="bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-md focus-visible"
+                          aria-label={t("role")}>
+                    <option value="admin">{t("admin")}</option>
+                    <option value="instructor">{t("instructor")}</option>
+                    <option value="student">{t("student")}</option>
                   </select>
                 </div>
               </div>
             </header>
 
-            {/* ===== MAIN SECTION ===== */}
+            {/* ----- Main area ----- */}
             <main className="flex-1 bg-page transition-colors duration-300">
               <section className="max-w-7xl mx-auto px-4 py-6">
-                {/* ===== DASHBOARD ===== */}
+                {/* Dashboard */}
                 <Dashboard />
 
-                {/* ===== COURSES ===== */}
+                {/* Courses */}
                 <section className="mt-12">
-                  <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mb-4">{tr("courses")}</h2>
+                  <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mb-4">{t("courses")}</h2>
                   <CourseManagement role={role} />
                 </section>
 
-                {/* ===== STUDENTS ===== */}
+                {/* Students */}
                 <section className="mt-12">
-                  <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mb-4">{tr("students")}</h2>
+                  <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mb-4">{t("students")}</h2>
                   <StudentManagement role={role} />
                 </section>
 
-                {/* ===== CONTENT ===== */}
+                {/* Content */}
                 <section className="mt-12">
-                  <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mb-4">{tr("content")}</h2>
+                  <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mb-4">{t("content")}</h2>
                   <ContentManagement role={role} />
                 </section>
               </section>
             </main>
 
-            {/* ===== TOASTS ===== */}
+            {/* Toast notifications */}
             <Toaster position="bottom-right" />
           </div>
         </QueryClientProvider>
       );
     };
 
-    /* ==== DASHBOARD ==== */
+    // --------------------------------------------------------------------
+    // Dashboard (metrics + chart + activity)
+    // --------------------------------------------------------------------
     const Dashboard = () => {
-      const { data: metrics, isLoading: metricsLoading } = useQuery(
-        ["metrics"],
-        fetchMetrics,
-        { staleTime: 5 * 60 * 1000 }
-      );
-      const { data: activity, isLoading: activityLoading } = useQuery(
-        ["activity"],
-        fetchRecentActivity,
-        { staleTime: 60 * 1000 }
-      );
-
-      const tr = i18next.t.bind(i18next);
+      const { data: metrics, isLoading: mLoading } = useQuery(["metrics"], fetchMetrics, { staleTime:5*60*1000 });
+      const { data: activity, isLoading: aLoading } = useQuery(["activity"], fetchActivity, { staleTime:60*1000 });
 
       return (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          {/* METRIC CARDS */}
+          {/* ---- Metrics ---- */}
           <div className="md:col-span-8 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <MetricCard
-                label={tr("metrics.totalCourses")}
-                value={metrics?.totalCourses}
-                loading={metricsLoading}
-              />
-              <MetricCard
-                label={tr("metrics.totalStudents")}
-                value={metrics?.totalStudents}
-                loading={metricsLoading}
-              />
-              <MetricCard
-                label={tr("metrics.completions")}
-                value={metrics?.completions}
-                loading={metricsLoading}
-              />
-              <MetricCard
-                label={tr("metrics.activeUsers")}
-                value={metrics?.activeUsers}
-                loading={metricsLoading}
-              />
+              <MetricCard label={t("metrics.totalCourses")} value={metrics?.totalCourses} loading={mLoading}/>
+              <MetricCard label={t("metrics.totalStudents")} value={metrics?.totalStudents} loading={mLoading}/>
+              <MetricCard label={t("metrics.completions")}   value={metrics?.completions}   loading={mLoading}/>
+              <MetricCard label={t("metrics.activeUsers")}  value={metrics?.activeUsers}  loading={mLoading}/>
             </div>
-
-            {/* CHART */}
+            {/* Chart */}
             <ChartWidget />
           </div>
 
-          {/* RECENT ACTIVITY */}
+          {/* ---- Recent activity ---- */}
           <div className="md:col-span-4 bg-white dark:bg-slate-800 rounded-card shadow-sm p-4 transition-colors duration-300">
-            <h3 className="text-lg font-semibold mb-3">{tr("recentActivity")}</h3>
-            {activityLoading ? (
+            <h3 className="text-lg font-semibold mb-3">{t("recentActivity")}</h3>
+            {aLoading ? (
               <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
+                {[1,2,3].map(i=>(
                   <div key={i} className="flex items-center space-x-2 animate-pulse">
                     <div className="w-10 h-10 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
                     <div className="flex-1 space-y-1">
@@ -518,7 +378,7 @@
               </div>
             ) : (
               <ul className="space-y-3">
-                {activity.map((a) => (
+                {activity.map(a=>(
                   <li key={a.id} className="flex items-center space-x-3">
                     <img src={a.avatar} alt={a.user} className="w-10 h-10 rounded-full object-cover" loading="lazy"/>
                     <div className="flex-1">
@@ -535,72 +395,49 @@
       );
     };
 
-    const MetricCard = ({ label, value, loading }) => (
+    const MetricCard = ({label, value, loading}) => (
       <div className="gradient-card text-white rounded-card p-4 shadow-sm transform hover:scale-105 transition-transform duration-300">
-        <div className="flex flex-col">
-          <span className="text-xs uppercase">{label}</span>
-          <span className="text-2xl font-semibold mt-1">
-            {loading ? (
-              <span className="inline-block w-12 h-5 bg-white/30 rounded animate-pulse"></span>
-            ) : (
-              value
-            )}
-          </span>
-        </div>
+        <span className="text-xs uppercase">{label}</span>
+        <span className="text-2xl font-semibold mt-1 block">
+          {loading ? <span className="inline-block w-12 h-5 bg-white/30 rounded animate-pulse"></span> : value}
+        </span>
       </div>
     );
 
     const ChartWidget = () => {
-      const chartRef = useRef(null);
       const { data, isLoading } = useQuery(
-        ["chartData"],
+        ["chart"],
         async () => {
-          // Simulated monthly enrollment vs completions
           await mockDelay(1000);
           return {
-            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-            datasets: [
-              {
-                label: "Enrollments",
-                data: [80, 120, 95, 140, 180, 160],
-                backgroundColor: "#2563eb",
-                borderColor: "#2563eb"
-              },
-              {
-                label: "Completions",
-                data: [50, 90, 70, 110, 150, 130],
-                backgroundColor: "#10b981",
-                borderColor: "#10b981"
-              }
+            labels:["Jan","Feb","Mar","Apr","May","Jun"],
+            datasets:[
+              {label:"Enrollments", data:[80,120,95,140,180,160], backgroundColor:"#2563eb", borderColor:"#2563eb"},
+              {label:"Completions", data:[50,90,70,110,150,130], backgroundColor:"#10b981", borderColor:"#10b981"}
             ]
           };
         },
-        { staleTime: 2 * 60 * 1000 }
+        { staleTime:2*60*1000 }
       );
 
+      const canvasRef = useRef(null);
       useEffect(() => {
-        if (chartRef.current && data) {
-          const ctx = chartRef.current.getContext("2d");
-          // Destroy previous chart instance if any (to avoid duplication on re‑render)
-          if (chartRef.current._chart) chartRef.current._chart.destroy();
-          chartRef.current._chart = new Chart(ctx, {
-            type: "bar",
+        if (canvasRef.current && data) {
+          const ctx = canvasRef.current.getContext("2d");
+          // destroy previous instance if any
+          if (canvasRef.current._chart) canvasRef.current._chart.destroy();
+          canvasRef.current._chart = new Chart(ctx, {
+            type:"bar",
             data,
-            options: {
-              responsive: true,
-              plugins: {
-                legend: { labels: { color: "#1e293b" } },
-                tooltip: {
-                  backgroundColor: "#fff",
-                  titleColor: "#1e293b",
-                  bodyColor: "#1e293b",
-                  borderColor: "#e2e8f0",
-                  borderWidth: 1
-                }
+            options:{
+              responsive:true,
+              plugins:{
+                legend:{labels:{color:"#1e293b"}},
+                tooltip:{backgroundColor:"#fff",titleColor:"#1e293b",bodyColor:"#1e293b",borderColor:"#e2e8f0",borderWidth:1}
               },
-              scales: {
-                x: { ticks: { color: "#1e293b" }, grid: { display: false } },
-                y: { ticks: { color: "#1e293b" }, grid: { color: "#e2e8f0" } }
+              scales:{
+                x:{ticks:{color:"#1e293b"},grid:{display:false}},
+                y:{ticks:{color:"#1e293b"},grid:{color:"#e2e8f0"}}
               }
             }
           });
@@ -611,35 +448,31 @@
         <div className="relative bg-white dark:bg-slate-800 rounded-card shadow-sm p-4 mt-4 transition-colors duration-300">
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-slate-800/80 rounded-card">
-              <span className="animate-pulse text-slate-600 dark:text-slate-300">{i18next.t("loading")}…</span>
+              <span className="animate-pulse text-slate-600 dark:text-slate-300">{t("loading")}…</span>
             </div>
           )}
-          <canvas ref={chartRef}></canvas>
+          <canvas ref={canvasRef}></canvas>
         </div>
       );
     };
 
-    /* ==== COURSE MANAGEMENT ==== */
-    const CourseManagement = ({ role }) => {
-      const { data: courses, isLoading, refetch } = useQuery(
-        ["courses"],
-        fetchCourses,
-        { staleTime: 5 * 60 * 1000 }
-      );
+    // --------------------------------------------------------------------
+    // Course Management (drag‑drop, bulk actions, search)
+    // --------------------------------------------------------------------
+    const CourseManagement = ({role}) => {
+      const { data: courses, isLoading, refetch } = useQuery(["courses"], fetchCourses, { staleTime:5*60*1000 });
       const [search, setSearch] = useState("");
       const [statusFilter, setStatusFilter] = useState("all");
       const [selected, setSelected] = useState(new Set());
 
-      const tr = i18next.t.bind(i18next);
       const debouncedSearch = useDebounce(search, 300);
-
       const filtered = useMemo(() => {
         if (!courses) return [];
-        return courses.filter((c) => c.title.toLowerCase().includes(debouncedSearch.toLowerCase()));
+        return courses.filter(c => c.title.toLowerCase().includes(debouncedSearch.toLowerCase()));
       }, [courses, debouncedSearch]);
 
       const toggleSelect = (id) => {
-        setSelected((prev) => {
+        setSelected(prev => {
           const newSet = new Set(prev);
           newSet.has(id) ? newSet.delete(id) : newSet.add(id);
           return newSet;
@@ -647,127 +480,98 @@
       };
 
       const bulkDelete = () => {
-        if (selected.size === 0) {
-          toast.error("Select at least one course");
-          return;
-        }
-        toast.success(`${selected.size} courses deleted`);
-        // Reset selection in demo
+        if (!selected.size) { toast.error("Select at least one course"); return; }
+        toast.success(`${selected.size} course(s) deleted`);
         setSelected(new Set());
       };
 
-      const addCourse = () => {
-        toast.success("Add‑Course modal (demo) opened");
-      };
+      const addCourse = () => toast.success("Add‑Course modal would appear");
 
       const onDragEnd = (result) => {
         if (!result.destination) return;
-        // In a real app, you’d post new order to server.
         toast.success("Course order saved");
       };
 
       return (
         <div className="bg-white dark:bg-slate-800 rounded-card shadow-sm p-4 transition-colors duration-300">
-          {/* ACTION BAR */}
+          {/* Action bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between mb-4 space-y-2 sm:space-y-0">
             <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                placeholder={tr("searchPlaceholder")}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="border border-slate-300 dark:border-slate-600 rounded-md px-3 py-1 focus-visible outline-none"
-                aria-label={tr("searchPlaceholder")}
-              />
-              {/* Filter chips */}
+              <input type="text"
+                     placeholder={t("searchPlaceholder")}
+                     value={search}
+                     onChange={e=>setSearch(e.target.value)}
+                     className="border border-slate-300 dark:border-slate-600 rounded-md px-3 py-1 focus-visible outline-none"
+                     aria-label={t("searchPlaceholder")} />
+              {/* filter chips */}
               <div className="flex space-x-1">
-                {["all", "active", "archived"].map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setStatusFilter(c)}
-                    className={`px-2 py-0.5 rounded-md text-sm ${
-                      statusFilter === c
-                        ? "bg-accent text-white"
-                        : "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200"
-                    } focus-visible`}
-                  >
-                    {tr(`filter${c.charAt(0).toUpperCase() + c.slice(1)}`) || c}
+                {["all","active","archived"].map(ch=>(
+                  <button key={ch}
+                          onClick={()=>setStatusFilter(ch)}
+                          className={`px-2 py-0.5 rounded-md text-sm ${
+                            statusFilter===ch ? "bg-accent text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200"
+                          } focus-visible`}>
+                    {t(`filter${ch.charAt(0).toUpperCase()+ch.slice(1)}`) || ch}
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="flex space-x-2">
-              {selected.size > 0 && role === "admin" && (
-                <button
-                  onClick={bulkDelete}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors focus-visible"
-                >
-                  {tr("bulkDelete")}
+              {selected.size>0 && role==="admin" && (
+                <button onClick={bulkDelete}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition-colors focus-visible">
+                  {t("bulkDelete")}
                 </button>
               )}
-              {role === "admin" && (
-                <button
-                  onClick={addCourse}
-                  className="bg-primary hover:bg-primary/80 text-white px-3 py-1 rounded-md transition-colors focus-visible"
-                >
-                  {tr("addCourse")}
+              {role==="admin" && (
+                <button onClick={addCourse}
+                        className="bg-primary hover:bg-primary/80 text-white px-3 py-1 rounded-md transition-colors focus-visible">
+                  {t("addCourse")}
                 </button>
               )}
             </div>
           </div>
 
-          {/* COURSES GRID */}
+          {/* Course grid */}
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+              {[1,2,3,4,5,6].map(i=>(
                 <div key={i} className="animate-pulse bg-slate-200 dark:bg-slate-700 h-56 rounded-card"></div>
               ))}
             </div>
           ) : (
             <DragDropContext onDragEnd={onDragEnd}>
               <Droppable droppableId="courses" direction="vertical">
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                  >
-                    {filtered.map((c, idx) => (
+                {(provided)=>(
+                  <div ref={provided.innerRef}
+                       {...provided.droppableProps}
+                       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filtered.map((c, idx)=>(
                       <Draggable key={c.id} draggableId={c.id} index={idx}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={`relative bg-white dark:bg-slate-800 rounded-card shadow-sm overflow-hidden transition-transform duration-200 ${
-                              snapshot.isDragging ? "scale-105 shadow-lg" : ""
-                            }`}
-                          >
-                            {/* Bulk-select checkbox */}
-                            {role === "admin" && (
-                              <input
-                                type="checkbox"
-                                checked={selected.has(c.id)}
-                                onChange={() => toggleSelect(c.id)}
-                                className="absolute top-2 left-2 h-5 w-5 text-accent border-gray-300 rounded focus-visible"
-                                aria-label={`Select ${c.title}`}
-                              />
+                        {(provided, snapshot)=>(
+                          <div ref={provided.innerRef}
+                               {...provided.draggableProps}
+                               {...provided.dragHandleProps}
+                               className={`relative bg-white dark:bg-slate-800 rounded-card shadow-sm overflow-hidden transition-transform duration-200 ${
+                                 snapshot.isDragging ? "scale-105 shadow-lg" : ""
+                               }`}>
+                            {role==="admin" && (
+                              <input type="checkbox"
+                                     checked={selected.has(c.id)}
+                                     onChange={()=>toggleSelect(c.id)}
+                                     className="absolute top-2 left-2 h-5 w-5 text-accent border-gray-300 rounded focus-visible"
+                                     aria-label={`Select ${c.title}`} />
                             )}
-                            <img
-                              src={c.cover}
-                              alt={c.title}
-                              className="w-full h-32 object-cover"
-                              loading="lazy"
-                            />
+                            <img src={c.cover} alt={c.title}
+                                 className="w-full h-32 object-cover"
+                                 loading="lazy"/>
                             <div className="p-3">
                               <h4 className="font-semibold text-slate-800 dark:text-slate-100 truncate">{c.title}</h4>
                               <div className="mt-2 h-2 bg-slate-200 dark:bg-slate-700 rounded">
-                                <div className="h-2 bg-accent rounded" style={{ width: `${c.progress * 100}%` }}></div>
+                                <div className="h-2 bg-accent rounded" style={{width:`${c.progress*100}%`}}></div>
                               </div>
-                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                                {Math.round(c.progress * 100)}% Complete
-                              </p>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{Math.round(c.progress*100)}% Complete</p>
                             </div>
                           </div>
                         )}
@@ -783,69 +587,55 @@
       );
     };
 
-    /* ==== STUDENT MANAGEMENT ==== */
-    const StudentManagement = ({ role }) => {
-      const { data: students, isLoading } = useQuery(
-        ["students"],
-        fetchStudents,
-        { staleTime: 5 * 60 * 1000 }
-      );
-
+    // --------------------------------------------------------------------
+    // Student Management (table, pagination, export)
+    // --------------------------------------------------------------------
+    const StudentManagement = ({role}) => {
+      const { data: students, isLoading } = useQuery(["students"], fetchStudents, { staleTime:5*60*1000 });
       const [page, setPage] = useState(1);
       const pageSize = 10;
 
-      const tr = i18next.t.bind(i18next);
-      const totalPages = useMemo(() => (students ? Math.ceil(students.length / pageSize) : 0), [students]);
-
+      const totalPages = useMemo(() => students ? Math.ceil(students.length/pageSize) : 0, [students]);
       const pageData = useMemo(() => {
         if (!students) return [];
-        const start = (page - 1) * pageSize;
-        return students.slice(start, start + pageSize);
+        const start = (page-1)*pageSize;
+        return students.slice(start, start+pageSize);
       }, [students, page]);
 
       const exportCSV = () => {
         if (!students) return;
-        const header = ["Name", "Email", "Status"];
-        const rows = students.map((s) => [s.name, s.email, s.status]);
-        const csvContent =
-          "data:text/csv;charset=utf-8," +
-          [header, ...rows]
-            .map((e) => e.map((v) => `"${v}"`).join(","))
-            .join("\n");
+        const header = ["Name","Email","Status"];
+        const rows = students.map(s=>[s.name,s.email,s.status]);
+        const csv = "data:text/csv;charset=utf-8,"+
+                    [header,...rows].map(r=>r.map(v=>`"${v}"`).join(",")).join("\n");
         const link = document.createElement("a");
-        link.setAttribute("href", encodeURI(csvContent));
-        link.setAttribute("download", "students.csv");
+        link.href = encodeURI(csv);
+        link.download = "students.csv";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         toast.success("CSV exported");
       };
 
-      const statusColors = {
-        enrolled: "bg-accent",
-        pending: "bg-yellow-500",
-        completed: "bg-indigo-600"
-      };
+      const statusColors = {enrolled:"bg-accent", pending:"bg-yellow-500", completed:"bg-indigo-600"};
 
       return (
         <div className="bg-white dark:bg-slate-800 rounded-card shadow-sm p-4 transition-colors duration-300">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">{tr("students")}</h3>
-            {role === "admin" && (
-              <button
-                onClick={exportCSV}
-                className="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-1 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors focus-visible"
-              >
-                {tr("export")}
+            <h3 className="text-lg font-medium">{t("students")}</h3>
+            {role==="admin" && (
+              <button onClick={exportCSV}
+                      className="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-3 py-1 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors focus-visible">
+                {t("export")}
               </button>
             )}
           </div>
 
-          {/* TABLE */}
+          {/* Table */}
           <div className="overflow-x-auto">
             {isLoading ? (
               <div className="space-y-2">
-                {[1, 2, 3, 4, 5].map((i) => (
+                {[1,2,3,4,5].map(i=>(
                   <div key={i} className="flex items-center space-x-3 animate-pulse">
                     <div className="w-10 h-10 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
                     <div className="flex-1 space-y-1">
@@ -861,32 +651,29 @@
                   <thead className="bg-slate-100 dark:bg-slate-700">
                     <tr>
                       <th className="px-4 py-2 text-left">#</th>
-                      <th className="px-4 py-2 text-left">{tr("profile")}</th>
-                      <th className="px-4 py-2 text-left">{tr("enrollmentStatus")}</th>
-                      {role === "admin" && <th className="px-4 py-2 text-left">Actions</th>}
+                      <th className="px-4 py-2 text-left">{t("profile")}</th>
+                      <th className="px-4 py-2 text-left">{t("enrollmentStatus")}</th>
+                      {role==="admin" && <th className="px-4 py-2 text-left">Actions</th>}
                     </tr>
                   </thead>
                   <tbody>
-                    {pageData.map((s, i) => (
-                      <tr key={s.id} className="border-b border-slate-200 dark:border-slate-600">
-                        <td className="px-4 py-2">{(page - 1) * pageSize + i + 1}</td>
+                    {pageData.map((s,i)=>(
+                      <tr key={s.id}
+                          className="border-b border-slate-200 dark:border-slate-600">
+                        <td className="px-4 py-2">{(page-1)*pageSize + i + 1}</td>
                         <td className="px-4 py-2 flex items-center space-x-2">
-                          <img src={s.avatar} alt={s.name} className="w-8 h-8 rounded-full object-cover" loading="lazy" />
+                          <img src={s.avatar} alt={s.name} className="w-8 h-8 rounded-full object-cover" loading="lazy"/>
                           <div>
                             <p className="font-medium">{s.name}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">{s.email}</p>
                           </div>
                         </td>
                         <td className="px-4 py-2">
-                          <span className={`px-2 py-0.5 rounded text-xs text-white ${statusColors[s.status]}`}>
-                            {tr(`status.${s.status}`)}
-                          </span>
+                          <span className={`px-2 py-0.5 rounded text-xs text-white ${statusColors[s.status]}`}>{t(`status.${s.status}`)}</span>
                         </td>
-                        {role === "admin" && (
+                        {role==="admin" && (
                           <td className="px-4 py-2">
-                            <button className="bg-primary hover:bg-primary/80 text-white px-2 py-1 rounded-md focus-visible">
-                              {tr("profile")}
-                            </button>
+                            <button className="bg-primary hover:bg-primary/80 text-white px-2 py-1 rounded-md focus-visible">{t("profile")}</button>
                           </td>
                         )}
                       </tr>
@@ -894,21 +681,17 @@
                   </tbody>
                 </table>
 
-                {/* PAGINATION */}
+                {/* Pagination */}
                 <div className="flex justify-end items-center mt-4 space-x-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                    disabled={page === 1}
-                    className="px-3 py-1 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 disabled:opacity-50 focus-visible"
-                  >
+                  <button onClick={()=>setPage(p=>Math.max(p-1,1))}
+                          disabled={page===1}
+                          className="px-3 py-1 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 disabled:opacity-50 focus-visible">
                     &lt;
                   </button>
                   <span>{page} / {totalPages}</span>
-                  <button
-                    onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                    disabled={page === totalPages}
-                    className="px-3 py-1 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 disabled:opacity-50 focus-visible"
-                  >
+                  <button onClick={()=>setPage(p=>Math.min(p+1,totalPages))}
+                          disabled={page===totalPages}
+                          className="px-3 py-1 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 disabled:opacity-50 focus-visible">
                     &gt;
                   </button>
                 </div>
@@ -919,103 +702,87 @@
       );
     };
 
-    /* ==== CONTENT MANAGEMENT ==== */
-    const ContentManagement = ({ role }) => {
+    // --------------------------------------------------------------------
+    // Content Management (rich‑text placeholder, file drop, version history)
+    // --------------------------------------------------------------------
+    const ContentManagement = ({role}) => {
       const {
         register,
         handleSubmit,
         reset,
-        formState: { errors, isSubmitting },
-      } = useForm({ defaultValues: { title: "", body: "" } });
+        formState:{ errors, isSubmitting }
+      } = useForm({ defaultValues:{ title:"", body:"" } });
 
       const [versions, setVersions] = useState([]);
 
-      const tr = i18next.t.bind(i18next);
-
-      const onSubmit = (data) => {
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            toast.success("Content saved");
-            setVersions((prev) => [{ ...data, date: new Date() }, ...prev]);
-            reset();
-            resolve();
-          }, 800);
-        });
-      };
+      const onSubmit = (data) => new Promise(res=>{
+        setTimeout(()=>{
+          toast.success("Content saved");
+          setVersions(prev=>[{...data,date:new Date()},...prev]);
+          reset();
+          res();
+        },800);
+      });
 
       const onDrop = (e) => {
         e.preventDefault();
         const files = e.dataTransfer.files;
-        if (files.length) {
-          toast.success(`${files.length} file(s) uploaded`);
-        }
+        if (files.length) toast.success(`${files.length} file(s) uploaded`);
       };
 
       return (
-        <div
-          className="bg-white dark:bg-slate-800 rounded-card shadow-sm p-6 transition-colors duration-300"
-          onDrop={onDrop}
-          onDragOver={(e) => e.preventDefault()}
-        >
+        <div className="bg-white dark:bg-slate-800 rounded-card shadow-sm p-6 transition-colors duration-300"
+             onDrop={onDrop}
+             onDragOver={e=>e.preventDefault()}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="block font-medium mb-1">{tr("titleField")}</label>
-              <input
-                type="text"
-                placeholder={tr("titleField")}
-                {...register("title", { required: true })}
-                className={`w-full border ${
-                  errors.title ? "border-red-500" : "border-slate-300 dark:border-slate-600"
-                } rounded-md px-3 py-2 focus-visible outline-none`}
-                aria-invalid={!!errors.title}
-                aria-label={tr("titleField")}
-              />
-              {errors.title && <p className="text-red-600 text-sm mt-1">{tr("required")}</p>}
+              <label className="block font-medium mb-1">{t("titleField")}</label>
+              <input type="text"
+                     placeholder={t("titleField")}
+                     {...register("title",{required:true})}
+                     className={`w-full border ${
+                       errors.title ? "border-red-500" : "border-slate-300 dark:border-slate-600"
+                     } rounded-md px-3 py-2 focus-visible outline-none`}
+                     aria-invalid={!!errors.title}
+                     aria-label={t("titleField")} />
+              {errors.title && <p className="text-red-600 text-sm mt-1">{t("required")}</p>}
             </div>
 
             <div>
-              <label className="block font-medium mb-1">{tr("contentField")}</label>
-              <textarea
-                placeholder={tr("contentField")}
-                {...register("body", { required: true })}
-                className={`w-full h-40 border ${
-                  errors.body ? "border-red-500" : "border-slate-300 dark:border-slate-600"
-                } rounded-md p-3 focus-visible outline-none`}
-                aria-invalid={!!errors.body}
-                aria-label={tr("contentField")}
-              />
-              {errors.body && <p className="text-red-600 text-sm mt-1">{tr("required")}</p>}
+              <label className="block font-medium mb-1">{t("contentField")}</label>
+              <textarea placeholder={t("contentField")}
+                        {...register("body",{required:true})}
+                        className={`w-full h-40 border ${
+                          errors.body ? "border-red-500" : "border-slate-300 dark:border-slate-600"
+                        } rounded-md p-3 focus-visible outline-none`}
+                        aria-invalid={!!errors.body}
+                        aria-label={t("contentField")} />
+              {errors.body && <p className="text-red-600 text-sm mt-1">{t("required")}</p>}
             </div>
 
             <div className="flex items-center space-x-2">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-accent hover:bg-accent/80 text-white px-4 py-2 rounded-md focus-visible transition-colors disabled:opacity-50"
-              >
-                {isSubmitting ? tr("saving") : tr("save")}
+              <button type="submit"
+                      disabled={isSubmitting}
+                      className="bg-accent hover:bg-accent/80 text-white px-4 py-2 rounded-md focus-visible transition-colors disabled:opacity-50">
+                {isSubmitting ? t("saving") : t("save")}
               </button>
-              <button
-                type="button"
-                onClick={() => reset()}
-                className="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-4 py-2 rounded-md focus-visible hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
-              >
-                {tr("cancel")}
+              <button type="button"
+                      onClick={()=>reset()}
+                      className="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 px-4 py-2 rounded-md focus-visible hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+                {t("cancel")}
               </button>
             </div>
           </form>
 
-          {/* Version History */}
-          {versions.length > 0 && (
+          {/* Version history */}
+          {versions.length>0 && (
             <div className="mt-6">
-              <h4 className="font-semibold mb-2">{tr("versionHistory")}</h4>
+              <h4 className="font-semibold mb-2">{t("versionHistory")}</h4>
               <ul className="space-y-2">
-                {versions.map((v, i) => (
+                {versions.map((v,i)=>(
                   <li key={i} className="border-b border-slate-200 dark:border-slate-600 pb-2">
                     <p className="font-medium">{v.title}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {v.date.toLocaleString()}
-                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{v.date.toLocaleString()}</p>
                   </li>
                 ))}
               </ul>
@@ -1025,19 +792,11 @@
       );
     };
 
-    /* ==== DEBOUNCE HOOK ==== */
-    const useDebounce = (value, delay = 300) => {
-      const [debounced, setDebounced] = useState(value);
-      useEffect(() => {
-        const id = setTimeout(() => setDebounced(value), delay);
-        return () => clearTimeout(id);
-      }, [value, delay]);
-      return debounced;
-    };
-
-    /* ==== RENDER ==== */
-    const container = document.getElementById("root");
-    const root = createRoot(container);
+    // --------------------------------------------------------------------
+    // Render into #root
+    // --------------------------------------------------------------------
+    const rootEl = document.getElementById("root");
+    const root = createRoot(rootEl);
     root.render(<App />);
   </script>
 </body>
