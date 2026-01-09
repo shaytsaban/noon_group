@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modern Course Management System</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb',
+            secondary: '#64748b',
+            accent: '#10b981',
+            background: '#f8fafc',
+            text: '#1e293b'
+          },
+          borderRadius: {
+            lg: '8px'
+          },
+          transitionDuration: {
+            DEFAULT: '300ms'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+  </style>
+</head>
+
+<body class="h-full bg-background text-text dark:bg-slate-900 dark:text-slate-100">
+
+<div id="root" class="h-full"></div>
+
+<script type="text/babel">
+
+/* =====================
+   UTILITIES & MOCK API
+===================== */
+
+const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+const mockFetch = async (data) => {
+  await delay(800);
+  return data;
+};
+
+/* =====================
+   TOAST SYSTEM
+===================== */
+
+const ToastContext = React.createContext();
+
+function ToastProvider({ children }) {
+  const [toasts, setToasts] = React.useState([]);
+
+  const showToast = (message) => {
+    setToasts(t => [...t, message]);
+    setTimeout(() => setToasts(t => t.slice(1)), 3000);
+  };
+
+  return (
+    <ToastContext.Provider value={showToast}>
+      {children}
+      <div className="fixed top-4 right-4 space-y-2 z-50">
+        {toasts.map((t, i) => (
+          <div key={i} className="bg-primary text-white px-4 py-2 rounded-lg shadow">
+            {t}
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+}
+
+/* =====================
+   DASHBOARD METRICS
+===================== */
+
+function MetricCard({ title, value }) {
+  return (
+    <div className="p-4 rounded-lg shadow bg-white dark:bg-slate-800 transition">
+      <h3 className="text-sm text-secondary">{title}</h3>
+      <p className="text-2xl font-semibold">{value}</p>
+    </div>
+  );
+}
+
+/* =====================
+   CHART COMPONENT
+===================== */
+
+function AnalyticsChart() {
+  const ref = React.useRef();
+
+  React.useEffect(() => {
+    new Chart(ref.current, {
+      type: 'line',
+      data: {
+        labels: ['Mon','Tue','Wed','Thu','Fri'],
+        datasets: [{
+          label: 'Active Students',
+          data: [120, 190, 300, 250, 220],
+          borderColor: '#2563eb',
+          tension: 0.4
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }, []);
+
+  return <canvas ref={ref} />;
+}
+
+/* =====================
+   COURSE CARD
+===================== */
+
+function CourseCard({ title }) {
+  return (
+    <div className="rounded-lg shadow bg-white dark:bg-slate-800 p-4 hover:scale-[1.02] transition">
+      <div className="h-32 bg-gradient-to-br from-primary to-accent rounded mb-3"></div>
+      <h4 className="font-semibold">{title}</h4>
+      <div className="mt-2 h-2 bg-slate-200 rounded">
+        <div className="h-2 bg-accent rounded w-2/3"></div>
+      </div>
+    </div>
+  );
+}
+
+/* =====================
+   MAIN APP
+===================== */
+
+function App() {
+  const [dark, setDark] = React.useState(false);
+  const toast = React.useContext(ToastContext);
+
+  return (
+    <div className={dark ? 'dark h-full' : 'h-full'}>
+      <div className="min-h-full grid grid-cols-12 gap-6 p-6">
+
+        {/* Sidebar */}
+        <aside className="col-span-12 md:col-span-2 space-y-4">
+          <h1 className="font-semibold text-xl">CMS</h1>
+          <button
+            onClick={() => setDark(!dark)}
+            className="w-full bg-primary text-white py-2 rounded-lg"
+          >
+            Toggle Dark Mode
+          </button>
+        </aside>
+
+        {/* Main Content */}
+        <main className="col-span-12 md:col-span-10 space-y-6">
+
+          {/* Metrics */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <MetricCard title="Total Courses" value="24" />
+            <MetricCard title="Active Students" value="1,284" />
+            <MetricCard title="Completion Rate" value="87%" />
+          </section>
+
+          {/* Analytics */}
+          <section className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow">
+            <h2 className="font-semibold mb-4">Weekly Activity</h2>
+            <AnalyticsChart />
+          </section>
+
+          {/* Courses */}
+          <section>
+            <div className="flex justify-between mb-4">
+              <h2 className="font-semibold">Courses</h2>
+              <button
+                onClick={() => toast('Course created')}
+                className="bg-accent text-white px-4 py-2 rounded-lg"
+              >
+                New Course
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CourseCard title="React Fundamentals" />
+              <CourseCard title="Advanced TypeScript" />
+              <CourseCard title="UI/UX for Developers" />
+            </div>
+          </section>
+
+        </main>
+      </div>
+    </div>
+  );
+}
+
+/* =====================
+   RENDER
+===================== */
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <ToastProvider>
+    <App />
+  </ToastProvider>
+);
+
+</script>
+</body>
+</html>
